@@ -96,7 +96,7 @@ rbind(jt_19_20,jt_20_21,jt_21_22)->jayson_tatum
 jayson_tatum$season<-as.factor(jayson_tatum$season)
 
 ##########################################################################
-#ML
+#Logistic Regression
 jayson_tatum%>%
   filter(!is.na(G))%>%
   select(`W/L`,PTS,AST,TRB,GmSc_Var)->ml_data
@@ -120,7 +120,11 @@ probs <- predict(logistic, newdata = test_set, type = "response")
 pred <- ifelse(probs > 0.5, 1, 0)
 
 confusionMatrix(factor(pred), factor(test_set$`W/L`), positive = as.character(1))
+#Accuracy 55%
 #############################################################################
+#random forest
 random_forest<-train(`W/L`~PTS+AST+TRB+GmSc_Var,data = ml_data,method = 'rf',
                       trControl = trainControl(method = 'cv', number = 5)) 
 random_forest
+
+#RMSE .5
