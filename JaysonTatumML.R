@@ -5,6 +5,9 @@ library(measures)
 library(caret)
 library(readxl)
 library(zoo)
+library(shiny)
+library(shinythemes)
+
 
 jt_19_20<-read_xlsx("./JaysonTatumBoxScores.xlsx",sheet = "JaysonTatum19-20RegSeason")
 jt_20_21<-read_xlsx("./JaysonTatumBoxScores.xlsx",sheet= "JaysonTatum20-21RegSeason")
@@ -94,6 +97,7 @@ jt_21_22%>%
 
 rbind(jt_19_20,jt_20_21,jt_21_22)->jayson_tatum
 jayson_tatum$season<-as.factor(jayson_tatum$season)
+rm(jt_19_20,jt_20_21,jt_21_22)
 
 ##########################################################################
 #Logistic Regression
@@ -128,3 +132,53 @@ random_forest<-train(`W/L`~PTS+AST+TRB+GmSc_Var,data = ml_data,method = 'rf',
 random_forest
 
 #RMSE .5
+
+data_list<-list(
+  "19-20"=jt_19_20,
+  "20-21"=jt_20_21,
+  "21-22"=jt_21_22
+)
+
+ui<-fluidPage(
+  theme=shinytheme("slate"),
+  headerPanel("Jayson Tatum"),
+  tabPanel(
+    title = "Select variables",
+    sidebarLayout(
+      sidebarPanel(
+        width = 3,
+        selectInput(
+          inputId = "dataset_choice",
+          label = "choose",
+          choices = c("19-20","20-21","21-22")
+        )
+      ),
+      mainPanel(
+        
+        # Output: Histogram ----
+        plotOutput(outputId = "distPlot")
+        
+      )
+    )
+  )
+  
+)
+
+server<-function(input,output){
+  rv<-reactiveValues()
+  
+  observe({
+    rv$data_set<-data_list%>%
+      pluck(input$dataset_choice)
+  })
+  
+  output$distPlot <- renderPlot({
+    
+    rv$data_set%>%
+      ggplot(aes(G,PTS))+
+      geom_smooth()
+    
+  })
+}
+
+shinyApp(ui=ui,server = server)
